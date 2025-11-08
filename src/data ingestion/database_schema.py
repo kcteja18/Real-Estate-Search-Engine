@@ -20,8 +20,9 @@ class Property(Base):
     
     id = Column(Integer, primary_key=True, autoincrement=True)
     property_id = Column(String(20), unique=True, nullable=False, index=True)
+    image_file = Column(String(200), nullable=False)
     # num_rooms = Column(Integer, nullable=False)
-    property_size_sqft = Column(Integer, nullable=False)
+    # property_size_sqft = Column(Integer, nullable=False)
     title = Column(String(200), nullable=False)
     long_description = Column(Text, nullable=False)
     city = Column(String(100), nullable=True)  # Extracted from title/location
@@ -37,7 +38,7 @@ class Property(Base):
     kitchens = Column(Integer,nullable=False)
     bathrooms = Column(Integer,nullable=False)
     garages = Column(Integer,nullable=False)
-    bedrooms = Column(Integer, nullable=False)
+    # bedrooms = Column(Integer, nullable=False)
     # Additional fields for processing
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

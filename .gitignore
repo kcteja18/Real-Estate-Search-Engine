@@ -1,0 +1,6 @@
+venv/
+.venv/
+# Ignore Excel temporary lock files
+~$*.xlsx
+~$*.xls
+~$*.csv

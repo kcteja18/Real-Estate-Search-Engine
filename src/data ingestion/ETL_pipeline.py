@@ -267,8 +267,9 @@ class PropertyETL:
                 property_record = Property(
                     # Data from Excel
                     property_id=row['property_id'],
-                    num_rooms=int(row['num_rooms']),
-                    property_size_sqft=int(row['property_size_sqft']),
+                    image_file = row['image_file'],
+                    # num_rooms=int(row['num_rooms']),
+                    # property_size_sqft=int(row['property_size_sqft']),
                     title=row['title'],
                     long_description=row['long_description'],
                     city = row['city'],
@@ -282,9 +283,9 @@ class PropertyETL:
                     
                     # AI Model Data (mapped to schema)
                     # 'rooms' (AI) -> bedrooms (DB)
-                    bedrooms=int(prediction_dict.get('rooms', 0)), 
+                    # bedrooms=int(prediction_dict.get('rooms', 0)), 
                     # 'num_rooms' (Excel) -> rooms (DB) - for redundancy
-                    rooms=int(row.get('num_rooms', 0)), 
+                    rooms=int(row.get('rooms', 0)), 
                     halls=int(prediction_dict.get('halls', 0)),
                     kitchens=int(prediction_dict.get('kitchens', 0)),
                     bathrooms=int(prediction_dict.get('bathrooms', 0)),
@@ -341,12 +342,13 @@ class PropertyETL:
         # Create rich text representation
         text_parts = [
             f"Property ID: {property_data.get('property_id', '')}",
+            f"Image: {property_data.get('image_file', '')}",
             f"Title: {property_data.get('title', '')}",
             f"Description: {property_data.get('long_description', '')}",
             f"Location: {property_data.get('location', '')}",
             f"City: {property_data.get('city', '')}",
-            f"Total Rooms (from Excel): {property_data.get('num_rooms', '')}",
-            f"Size: {property_data.get('property_size_sqft', '')} sqft",
+            # f"Total Rooms (from Excel): {property_data.get('num_rooms', '')}",
+            # f"Size: {property_data.get('property_size_sqft', '')} sqft",
             f"Price: ₹{property_data.get('price', '')}",
             f"Seller Type: {property_data.get('seller_type', '')}",
             f"Contact: {property_data.get('seller_contact', '')}",
@@ -354,7 +356,8 @@ class PropertyETL:
             f"Approval Status: {approval_status}",
             f"Certificates: {property_data.get('certificates', '')}",
             # --- Add AI Data to Text ---
-            f"AI Detected Bedrooms: {property_data.get('bedrooms', 0)}",
+            f"AI Detected rooms: {property_data.get('rooms', 0)}",
+            # f"AI Detected Bedrooms: {property_data.get('bedrooms', 0)}",
             f"AI Detected Bathrooms: {property_data.get('bathrooms', 0)}",
             f"AI Detected Kitchens: {property_data.get('kitchens', 0)}",
             f"AI Detected Halls: {property_data.get('halls', 0)}",
@@ -385,19 +388,21 @@ class PropertyETL:
                 # This dict must match the DB schema
                 property_data = {
                     'property_id': prop.property_id,
+                    'image_file':prop.image_file,
                     'title': prop.title,
                     'long_description': prop.long_description,
                     'location': prop.location,
                     'city': prop.city,
-                    'num_rooms': prop.num_rooms,
-                    'property_size_sqft': prop.property_size_sqft,
+                    # 'num_rooms': prop.num_rooms,
+                    # 'property_size_sqft': prop.property_size_sqft,
                     'price': prop.price,
                     'seller_type': prop.seller_type,
                     'seller_contact': prop.seller_contact,
                     'metadata_tags': prop.metadata_tags,
                     'certificates': prop.certificates,
                     # --- Add AI Data to Metadata ---
-                    'bedrooms': prop.bedrooms,
+                    # 'rooms': prop.rooms,
+                    # 'bedrooms': prop.bedrooms,
                     'bathrooms': prop.bathrooms,
                     'kitchens': prop.kitchens,
                     'halls': prop.halls,
@@ -517,7 +522,7 @@ def verify_data():
         print(f"Certificates in database: {certificate_count}")
         
         # Show sample property with AI data
-        sample = session.query(Property).filter(Property.bedrooms > 0).first()
+        sample = session.query(Property).filter(Property.bathrooms > 0).first()
         if not sample:
             sample = session.query(Property).first() # Get any if no AI data found
             
@@ -525,8 +530,8 @@ def verify_data():
             print(f"\nSample Property:")
             print(f"  ID: {sample.property_id}")
             print(f"  Title: {sample.title}")
-            print(f"  Excel Rooms: {sample.num_rooms}")
-            print(f"  AI Bedrooms: {sample.bedrooms}")
+            print(f"  Excel Rooms: {sample.rooms}")
+            # print(f"  AI Bedrooms: {sample.bedrooms}")
             print(f"  AI Bathrooms: {sample.bathrooms}")
             print(f"  AI Kitchens: {sample.kitchens}")
         
