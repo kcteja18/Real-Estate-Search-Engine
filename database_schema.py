@@ -20,7 +20,7 @@ class Property(Base):
     
     id = Column(Integer, primary_key=True, autoincrement=True)
     property_id = Column(String(20), unique=True, nullable=False, index=True)
-    num_rooms = Column(Integer, nullable=False)
+    # num_rooms = Column(Integer, nullable=False)
     property_size_sqft = Column(Integer, nullable=False)
     title = Column(String(200), nullable=False)
     long_description = Column(Text, nullable=False)
