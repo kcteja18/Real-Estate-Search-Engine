@@ -11,11 +11,11 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- Helper Functions (Pages) ---
+# --- Page Definitions ---
 
 def page_ingest():
     """Page for the /ingest endpoint"""
-    st.header("🚀 Bulk Property Ingestion")
+    st.header(" Bulk Property Ingestion")
     
     st.write("**How to use:**")
     st.write("1. Click the 'Browse files' button below.")
@@ -84,11 +84,6 @@ def page_analyzer():
                         col3.metric("Kitchens", results.get("kitchens", 0))
                         col4.metric("Halls", results.get("halls", 0))
                         col5.metric("Garages", results.get("garages", 0))
-
-                        # --- CHANGE 2: Removed Raw JSON output on success ---
-                        # st.divider()
-                        # st.subheader("Raw JSON Response")
-                        # st.json(response.json())
                         
                     else:
                         st.error(f"Error from API (HTTP {response.status_code}):")

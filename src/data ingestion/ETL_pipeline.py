@@ -22,7 +22,7 @@ import json
 import sys
 import torch
 import torch.nn as nn
-# --- AI Model Imports ---
+# --- Model Imports ---
 import torch
 try:
     from inference import RoomDetectionCNN, parse_floorplan
@@ -96,17 +96,17 @@ class PropertyETL:
         }
 
     def load_ai_model(self) -> Optional[nn.Module]:
-        """Load the floorplan parsing AI model"""
-        logger.info(f"Loading AI model from {self.model_checkpoint_path}...")
+        """Load the floorplan parsing model"""
+        logger.info(f"Loading model from {self.model_checkpoint_path}...")
         if not os.path.exists(self.model_checkpoint_path):
-            logger.error(f"AI Model file not found at: {self.model_checkpoint_path}")
+            logger.error(f" Model file not found at: {self.model_checkpoint_path}")
             return None
         try:
             model = RoomDetectionCNN(max_rooms_per_type=self.max_rooms_per_type)
             model.load_state_dict(torch.load(self.model_checkpoint_path, map_location=self.device))
             model.to(self.device)
             model.eval()
-            logger.info(f"✓ AI Model loaded. Using device: {self.device.upper()}")
+            logger.info(f" Model loaded. Using device: {self.device.upper()}")
             return model
         except Exception as e:
             logger.error(f"Error loading AI model: {e}")
@@ -236,7 +236,7 @@ class PropertyETL:
             self.stats['processed_certificates'] += 1
 
     def load_properties(self, df: pd.DataFrame):
-        """Step 2 & 3: Run AI Model and Load property data into database"""
+        """Step 2 & 3: Run Model and Load property data into database"""
         logger.info("Loading properties into database...")
         
         for index, row in df.iterrows():
@@ -256,11 +256,11 @@ class PropertyETL:
                     image_path = self.image_dir / image_name
                     prediction_dict = parse_floorplan(self.model, image_path, self.device)
                     if prediction_dict:
-                        logger.info(f"  AI Success for {row['property_id']}: {json.dumps(prediction_dict)}")
+                        logger.info(f"  Success for {row['property_id']}: {json.dumps(prediction_dict)}")
                     else:
                         prediction_dict = {} # Ensure it's a dict
                 else:
-                    logger.warning(f"  Skipping AI model for {row['property_id']}: No image or model.")
+                    logger.warning(f"  Skipping  model for {row['property_id']}: No image or model.")
                 # --- End AI Model Integration ---
 
                 # Create property record (mapping to database_schema.py)
@@ -280,11 +280,6 @@ class PropertyETL:
                     certificates=row['certificates'],
                     seller_contact=row['seller_contact'] if pd.notna(row['seller_contact']) else None,
                     metadata_tags=row['metadata_tags'],
-                    
-                    # AI Model Data (mapped to schema)
-                    # 'rooms' (AI) -> bedrooms (DB)
-                    # bedrooms=int(prediction_dict.get('rooms', 0)), 
-                    # 'num_rooms' (Excel) -> rooms (DB) - for redundancy
                     rooms=int(row.get('rooms', 0)), 
                     halls=int(prediction_dict.get('halls', 0)),
                     kitchens=int(prediction_dict.get('kitchens', 0)),
@@ -347,17 +342,14 @@ class PropertyETL:
             f"Description: {property_data.get('long_description', '')}",
             f"Location: {property_data.get('location', '')}",
             f"City: {property_data.get('city', '')}",
-            # f"Total Rooms (from Excel): {property_data.get('num_rooms', '')}",
-            # f"Size: {property_data.get('property_size_sqft', '')} sqft",
             f"Price: ₹{property_data.get('price', '')}",
             f"Seller Type: {property_data.get('seller_type', '')}",
             f"Contact: {property_data.get('seller_contact', '')}",
             f"Tags: {property_data.get('metadata_tags', '')}",
             f"Approval Status: {approval_status}",
             f"Certificates: {property_data.get('certificates', '')}",
-            # --- Add AI Data to Text ---
+            # --- Add Data to Text ---
             f"AI Detected rooms: {property_data.get('rooms', 0)}",
-            # f"AI Detected Bedrooms: {property_data.get('bedrooms', 0)}",
             f"AI Detected Bathrooms: {property_data.get('bathrooms', 0)}",
             f"AI Detected Kitchens: {property_data.get('kitchens', 0)}",
             f"AI Detected Halls: {property_data.get('halls', 0)}",
@@ -393,16 +385,11 @@ class PropertyETL:
                     'long_description': prop.long_description,
                     'location': prop.location,
                     'city': prop.city,
-                    # 'num_rooms': prop.num_rooms,
-                    # 'property_size_sqft': prop.property_size_sqft,
                     'price': prop.price,
                     'seller_type': prop.seller_type,
                     'seller_contact': prop.seller_contact,
                     'metadata_tags': prop.metadata_tags,
                     'certificates': prop.certificates,
-                    # --- Add AI Data to Metadata ---
-                    # 'rooms': prop.rooms,
-                    # 'bedrooms': prop.bedrooms,
                     'bathrooms': prop.bathrooms,
                     'kitchens': prop.kitchens,
                     'halls': prop.halls,
@@ -521,19 +508,18 @@ def verify_data():
         certificate_count = session.query(Certificate).count()
         print(f"Certificates in database: {certificate_count}")
         
-        # Show sample property with AI data
+        # Show sample property with data
         sample = session.query(Property).filter(Property.bathrooms > 0).first()
         if not sample:
-            sample = session.query(Property).first() # Get any if no AI data found
+            sample = session.query(Property).first() # Get any if no data found
             
         if sample:
             print(f"\nSample Property:")
             print(f"  ID: {sample.property_id}")
             print(f"  Title: {sample.title}")
             print(f"  Excel Rooms: {sample.rooms}")
-            # print(f"  AI Bedrooms: {sample.bedrooms}")
-            print(f"  AI Bathrooms: {sample.bathrooms}")
-            print(f"  AI Kitchens: {sample.kitchens}")
+            print(f"  Bathrooms: {sample.bathrooms}")
+            print(f"  Kitchens: {sample.kitchens}")
         
         # Vector database info
         vector_db_path = Path('./vector_db')

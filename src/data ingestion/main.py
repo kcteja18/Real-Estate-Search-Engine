@@ -1,5 +1,3 @@
-#  main.py
-
 import os
 import shutil
 import logging
@@ -37,10 +35,10 @@ Path(TEMP_UPLOAD_DIR).mkdir(exist_ok=True)
 async def lifespan(app: FastAPI):
     """
     Manages the application's lifespan.
-    The AI model is loaded on startup and stored in app.state.
+    The model is loaded on startup and stored in app.state.
     """
     logger.info("Application startup...")
-    logger.info("Loading AI model...")
+    logger.info("Loading model...")
     
     # Get model path from environment or use default
     model_path = os.getenv('MODEL_CHECKPOINT_PATH', 'checkpoint_epoch_50.pth')
@@ -60,7 +58,7 @@ async def lifespan(app: FastAPI):
         # Store model and device in app state for access in endpoints
         app.state.model = model
         app.state.device = device
-        logger.info(f"✓ AI Model loaded successfully. Using device: {device.upper()}")
+        logger.info(f" Model loaded successfully. Using device: {device.upper()}")
         
     except Exception as e:
         logger.critical(f"FATAL: Failed to load AI model: {e}")
@@ -151,11 +149,10 @@ async def ingest_properties(file: UploadFile = File(..., description="The Proper
 @app.post("/parse-floorplan", summary="Parse a Single Floorplan Image")
 async def parse_single_floorplan(file: UploadFile = File(..., description="A single floorplan image (e.g., .png, .jpg).")):
     """
-    Debug endpoint to upload a single floorplan image and get the
-    AI model's room count prediction (using `inference.py`).
+    Debug endpoint to upload a single floorplan image and get the model's room count prediction (using `inference.py`).
     """
     if app.state.model is None:
-        raise HTTPException(status_code=503, detail="Service Unavailable: AI Model is not loaded.")
+        raise HTTPException(status_code=503, detail="Service Unavailable: Model is not loaded.")
 
     # Save the uploaded image to the temporary directory
     temp_path = Path(TEMP_UPLOAD_DIR) / file.filename
