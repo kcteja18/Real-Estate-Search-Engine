@@ -1,0 +1,22 @@
+# Dockerfile.backend
+FROM python:3.11-slim
+WORKDIR /app
+
+# Copy requirements from the root
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the backend app files from src/data ingestion/
+COPY src/data ingestion/main.py
+COPY src/data ingestion/ETL_pipeline.py
+COPY src/data ingestion/inference.py
+COPY src/data ingestion/database_schema.py 
+
+# Copy the model from src/training/
+COPY src/training/checkpoint_epoch_50.pth .
+
+# Copy the assets folder from the root
+COPY assets/ ./assets/
+
+EXPOSE 8000
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

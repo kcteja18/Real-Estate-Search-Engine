@@ -1,0 +1,30 @@
+#  .dockerignore
+# Exclude virtual environment
+venv/
+.venv/
+
+# Exclude Python cache
+__pycache__/
+src/__pycache__/
+
+# Exclude Git files
+.git/
+.gitignore
+
+# Exclude local data (let the container build its own)
+realestate.db
+src/data ingestion/realestate.db
+vector_db/
+src/data ingestion/vector_db/
+temp_uploads/
+src/data ingestion/temp_uploads/
+
+# Exclude local config
+.env
+
+# Exclude unneeded src folders/files
+src/agents/
+src/training/help.ipynb
+src/training/model_training.ipynb
+src/training/README_Training.md
+src/training/annotations2.coco.json

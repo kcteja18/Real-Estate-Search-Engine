@@ -1,0 +1,32 @@
+# docker-compose.yml 
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./.env       
+    volumes:
+      - db_data:/app/realestate.db
+      - vector_db_data:/app/vector_db
+      - temp_uploads:/app/temp_uploads
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "8501:8501"
+    environment:
+      - FASTAPI_URL=http://backend:8000
+    depends_on:
+      - backend
+
+volumes:
+  db_data:
+  vector_db_data:
+  temp_uploads:
