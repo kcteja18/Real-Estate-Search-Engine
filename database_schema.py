@@ -35,8 +35,9 @@ class Property(Base):
     rooms = Column(Integer,nullable=False)
     halls = Column(Integer,nullable=False)# JSON string of room details detected
     kitchens = Column(Integer,nullable=False)
-    bedrooms = Column(Integer,nullable=False)
+    bathrooms = Column(Integer,nullable=False)
     garages = Column(Integer,nullable=False)
+    bedrooms = Column(Integer, nullable=False)
     # Additional fields for processing
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
