@@ -41,4 +41,3 @@ This measures the accuracy of predicting the exact count for a specific room typ
 - Bathroom: 32.73%
 - Garage: 40.00%
 - Hall: 50.91%
-# Real-Estate-Search-Engine
