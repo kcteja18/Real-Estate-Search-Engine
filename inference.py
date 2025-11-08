@@ -3,12 +3,18 @@ Floorplan Prediction Script
 
 Loads a trained model and runs predictions on images from an Excel file.
 This script is self-contained and does not require the training Config.
+
+Corrections:
+1. Added torchvision.transforms for image normalization.
+2. Returns a dict from parse_floorplan, not a JSON string.
+3. Saves predictions as separate columns in the final Excel file.
 """
 
 import json
 import torch
 import torch.nn as nn
 import torchvision
+from torchvision import transforms  
 from pathlib import Path
 from PIL import Image
 import numpy as np
@@ -56,13 +62,20 @@ class RoomDetectionCNN(nn.Module):
 
 def parse_floorplan(model, image_path, device):
     """
-    Runs inference on a single floorplan image and returns a JSON string.
+    Runs inference on a single floorplan image and returns a dict.
     """
     try:
         image = Image.open(image_path).convert('RGB')
         image_np = np.array(image, dtype=np.float32) / 255.0
         image_tensor = torch.from_numpy(image_np).permute(2, 0, 1)
+
+        # Use standard ImageNet stats as the model backbone is ResNet
+        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                         std=[0.229, 0.224, 0.225])
+        image_tensor = normalize(image_tensor)
+        
         input_tensor = image_tensor.unsqueeze(0).to(device)
+        
     except FileNotFoundError:
         print(f"    WARNING: Image file not found at {image_path}")
         return None
@@ -83,10 +96,11 @@ def parse_floorplan(model, image_path, device):
         "rooms": predicted_counts.get('bedroom', 0),
         "halls": predicted_counts.get('hall', 0),
         "kitchens": predicted_counts.get('kitchen', 0),
-        "bathrooms": predicted_counts.get('bathroom', 0)
+        "bathrooms": predicted_counts.get('bathroom', 0),
+        "garages": predicted_counts.get('garage', 0) 
     }
     
-    return json.dumps(formatted_dict)
+    return formatted_dict 
 
 
 # ============================================================================
@@ -97,10 +111,10 @@ if __name__ == '__main__':
     print("--- Floorplan Prediction Script (Lean, XLSX) ---")
 
     # --- SCRIPT CONFIGURATION ---
-    TEST_IMAGE_DIR = r"D:\IITGN\Placement_prep\Real-Estate-Search-Engine\assets\images"
+    TEST_IMAGE_DIR = r"D:\IITGN\Placement_prep\assets\assets\images"
     MODEL_CHECKPOINT_PATH = r"D:\IITGN\Placement_prep\Real-Estate-Search-Engine\checkpoint_epoch_50.pth"
-    INPUT_FILE = r"D:\IITGN\Placement_prep\Real-Estate-Search-Engine\assets\Property_list.xlsx"  # <-- Use the .xlsx file name
-    OUTPUT_FILE = "Property_list_with_predictions.xlsx"
+    INPUT_FILE = r"D:\IITGN\Placement_prep\assets\assets\Property_list.xlsx"
+    OUTPUT_FILE = "Property_list_with_predictions2.xlsx"
     
     # --- CRITICAL MODEL PARAMETERS (Hard-coded from training) ---
     MAX_ROOMS_PER_TYPE = 10
@@ -141,33 +155,39 @@ if __name__ == '__main__':
 
     # --- Run Predictions ---
     print("Starting predictions...")
-    prediction_json_list = []
+    prediction_data_list = [] # Store list of prediction dicts
     for index, row in df.iterrows():
         image_name = row.get('image_file')
         print(f"  Processing [{index+1}/{len(df)}]: {image_name}")
 
         if pd.isna(image_name) or image_name == "":
             print("    SKIPPED: No image file.")
-            prediction_json_list.append(None)
+            prediction_data_list.append(None) # Append None for skipped rows
             continue
 
         image_path = os.path.join(TEST_IMAGE_DIR, image_name)
         
-        json_output = parse_floorplan(model, image_path, DEVICE)
+        # This now returns a dictionary or None
+        prediction_dict = parse_floorplan(model, image_path, DEVICE) 
         
-        prediction_json_list.append(json_output)
-        if json_output:
-            print(f"    SUCCESS: {json_output}")
+        prediction_data_list.append(prediction_dict)
+        if prediction_dict:
+            # Convert dict to string for clean console logging
+            log_str = json.dumps(prediction_dict)
+            print(f"    SUCCESS: {log_str}")
 
     print("✓ All predictions complete.")
-
-    # --- Save Output File ---
-    print("Adding JSON predictions to DataFrame...")
-    df['floorplan_json'] = prediction_json_list
+    print("Adding prediction columns to DataFrame...")
+    
+    predictions_df = pd.DataFrame(prediction_data_list)
+    df.reset_index(drop=True, inplace=True)
+    predictions_df.reset_index(drop=True, inplace=True)
+    output_df = pd.concat([df, predictions_df], axis=1)
     
     try:
         print(f"Saving new file to: {OUTPUT_FILE}...")
-        df.to_excel(OUTPUT_FILE, index=False, engine='openpyxl')
+        # Save the combined DataFrame
+        output_df.to_excel(OUTPUT_FILE, index=False, engine='openpyxl')
         print(f"\n✓ SUCCESS: New file created at {OUTPUT_FILE}")
     except Exception as e:
         print(f"\nERROR saving output file: {e}")
