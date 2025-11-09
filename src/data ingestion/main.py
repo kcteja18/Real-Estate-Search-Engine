@@ -163,7 +163,6 @@ async def parse_single_floorplan(file: UploadFile = File(..., description="A sin
         # --- Run Blocking Inference in a separate thread ---
         model = app.state.model
         device = app.state.device
-        
         # Use asyncio.to_thread for the 'parse_floorplan' function
         prediction = await asyncio.to_thread(parse_floorplan, model, temp_path, device)
         
